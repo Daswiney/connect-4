@@ -88,11 +88,9 @@ function onColumnClick(column) {
     animation.addEventListener('finish', checkGameEnd)
 }
 
-const cells = document.querySelectorAll(".cell");
-
 function checkGameEnd() {
-    animating = false;
-
+    animating = false;    
+    
     //check tie
     if(!pieces.includes(0)){
         modalContainer.style.display = "block";
