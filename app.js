@@ -163,7 +163,7 @@ function playerWin(playerTurn, pieces){
             ) {
                 return true;
         }
-        //Check diagonal win at starting index
+        //Check diagonal win (top left to bottom right) at starting index
         if(
             index % 7 < 4 &&
             index < 18 &&
@@ -174,7 +174,7 @@ function playerWin(playerTurn, pieces){
             ) {
                 return true;
         }
-        //Check diagonal win(other direction) at starting index
+        //Check diagonal win (top right to bottom left) at starting index
         if(
             index % 7 >= 3 &&
             index < 21 &&
@@ -182,6 +182,28 @@ function playerWin(playerTurn, pieces){
             pieces[index + 6] === playerTurn &&
             pieces[index + 12] === playerTurn &&
             pieces[index + 18] === playerTurn 
+            ) {
+                return true;
+        }
+        //Check diagonal win (bottom left to top right) at starting index
+        if(
+            index % 7 < 4 &&
+            index >= 21 &&
+            pieces[index] === playerTurn &&
+            pieces[index - 6] === playerTurn &&
+            pieces[index - 12] === playerTurn &&
+            pieces[index - 18] === playerTurn 
+            ) {
+                return true;
+        }
+        //Check diagonal win (bottom right to top left) at starting index
+        if(
+            index % 7 >= 3 &&
+            index >= 21 &&
+            pieces[index] === playerTurn &&
+            pieces[index - 8] === playerTurn &&
+            pieces[index - 16] === playerTurn &&
+            pieces[index - 24] === playerTurn 
             ) {
                 return true;
         }
