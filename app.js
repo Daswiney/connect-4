@@ -179,9 +179,9 @@ function playerWin(playerTurn, pieces){
             index % 7 >= 3 &&
             index < 21 &&
             pieces[index] === playerTurn &&
-            pieces[index + 8] === playerTurn &&
-            pieces[index + 16] === playerTurn &&
-            pieces[index + 24] === playerTurn 
+            pieces[index + 6] === playerTurn &&
+            pieces[index + 12] === playerTurn &&
+            pieces[index + 18] === playerTurn 
             ) {
                 return true;
         }
