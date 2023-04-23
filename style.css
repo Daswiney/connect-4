@@ -69,6 +69,28 @@ z-index: 1;
     transform: translateY(-10vmin);
 }
 
+#turn-indicator {
+    text-align: center;
+    font-weight: bold;
+    width: 150px;
+    height: 25px;
+    background-color: rgb(170, 163, 163);
+}
+
+.fall-out {
+    transform: translateY(1000px);
+    transition: transform 0.5s ease-out;
+}
+
+.piece[data-player="1"][data-highlighted="true"] {
+    background-image: url('red-win.png');
+
+  }
+  
+  .piece[data-player="2"][data-highlighted="true"] {
+    background-image: url('black-win.png');
+}
+
 /* MODAL */
 
 #modal-container {
@@ -79,16 +101,16 @@ z-index: 1;
     width: 100%;
     height: 100%;
     z-index: 1;
-    background-color: rgb(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.144);
     padding-top: 15vh;
 }
 
 #modal-content {
     position: relative;
-    width: 55vw;
+    width: 50vw;
     margin: auto;
     padding: 2.5vmin;
-    background-color: rgb(177, 177, 177);
+    background-color: rgba(42, 0, 110, 0.5);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -107,15 +129,11 @@ z-index: 1;
 }
 
 #reset {
-    color: blueviolet;
+    color: rgba(42, 0, 110, 0.5);
     font-size: 4vmin;
     margin: 2.5vmin;
     padding: 2.5vmin;
-    background-color: rgba(88, 233, 93, 0.653);
+    background-color: rgba(10, 213, 254, 0.5);
     font-weight: bold;
 }
 
-.fall-out {
-    transform: translateY(1000px);
-    transition: transform 0.5s ease-out;
-  }
