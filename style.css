@@ -116,6 +116,7 @@ z-index: 1;
     align-items: center;
     animation-name: animatetop;
     animation-duration: 0.25s ;
+    color: rgb(223, 0, 0);
 }
 
 @keyframes animatetop {
@@ -123,13 +124,23 @@ z-index: 1;
     to {top: 0; opacity: 1;}
 }
 
+#modal-title {
+    font-size: 5vmin;
+    color: rgb(0, 0, 0);
+    background-color: rgba(10, 213, 254, 0.5);
+    margin: 2vmin;
+    padding: .05vmin;
+    font-weight: bold;
+}
+
 #modal-message {
     font-size: 5vmin;
     margin: 2.5vmin;
+    color: rgb(129, 255, 127);
 }
 
 #reset {
-    color: rgba(42, 0, 110, 0.5);
+    color: rgb(0, 0, 0);
     font-size: 4vmin;
     margin: 2.5vmin;
     padding: 2.5vmin;

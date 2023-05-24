@@ -1,10 +1,53 @@
-const board = document.querySelector('#gameTable');
-const modalContainer = document.querySelector('#modal-container');
-const modalMessage = document.querySelector('#modal-message');
-const resetButton = document.querySelector('#reset');
+class ConnectFour {
+  constructor() {
+    this.board = document.querySelector('#gameTable');
+    this.modalContainer = document.querySelector('#modal-container');
+    this.modalMessage = document.querySelector('#modal-message');
+    this.resetButton = document.querySelector('#reset');
+    
+    this.resetButton.onclick = () => {
+      this.resetGame();
+    };
 
-resetButton.onclick = () => { 
-    //check for animation to drop pieces out before reset
+    this.RED_TURN = 1;
+    this.BLACK_TURN = 2;
+    
+    this.pieces = [
+      0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0
+    ];
+    
+    this.gameOver = false; 
+    this.playerTurn = this.RED_TURN;
+    this.hoverColumn = -1;
+    this.animating = false;
+    
+    for (let i = 0; i < 42; i++) {
+      let cell = document.createElement('div');
+      cell.className = "cell";
+      this.board.appendChild(cell);
+      
+      cell.onmouseenter = () => {
+        this.onMouseEnterColumn(i % 7);
+      }
+      
+      cell.onclick = () => {
+        if (!this.animating) {
+          this.onColumnClick(i % 7);
+        }
+      }
+    }
+    
+    this.timerElement = document.getElementById("timer");
+    this.timerElement.innerHTML = `Drop a Piece to Begin`;
+    this.intervalId = null;
+  }
+  
+  resetGame() {
     const pieces = document.querySelectorAll('.piece');
     pieces.forEach((piece) => {
       piece.addEventListener("transitionend", () => {
@@ -12,68 +55,32 @@ resetButton.onclick = () => {
       });
       piece.classList.add("fall-out");
     });
-  }
-
-const RED_TURN = 1;
-const BLACK_TURN = 2;
-
-// 0 = empty 1 = red 2 = black
-const pieces = [
-    0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0
-];
-
-let playerTurn = RED_TURN; // 1 =red 2 = black
-let hoverColumn = -1;
-let animating = false;
-
-for (let i = 0; i < 42; i++) {
-   let cell = document.createElement('div');
-   cell.className = "cell";
-   board.appendChild(cell);
-
-   cell.onmouseenter = () => {
-        onMouseEnterColumn(i % 7);
-   } 
-   //eventlistener for hovering over div
-   // divs 0 to 41 % 7 = 0 to 6 which column we are in
-
-    cell.onclick = () => {
-     if(!animating) { //stop from spam placing
-        onColumnClick(i % 7);
-     }
-  }
-
-}
-
-function onColumnClick(column) {
-    startTimer();
-    let openRow = pieces.filter((_, index) => index % 7 === column).lastIndexOf(0);
+    this.gameOver = false; // Reset game status
+  }    
+  
+  onColumnClick(column) {
+    this.startTimer();
+    let openRow = this.pieces.filter((_, index) => index % 7 === column).lastIndexOf(0);
     if (openRow === -1) {
-      //no space in column
       return;
     }
-    pieces[(openRow * 7) + column] = playerTurn;
-    let cell = board.children[(openRow * 7) + column];
-  
+    this.pieces[(openRow * 7) + column] = this.playerTurn;
+    let cell = this.board.children[(openRow * 7) + column];
+    
     let piece = document.createElement('div');
     piece.className = 'piece';
-    piece.dataset.player = playerTurn;
+    piece.dataset.player = this.playerTurn;
     piece.dataset.placed = true;
     cell.appendChild(piece);
-  
+
     let unplaced = document.querySelector("[data-placed='false']");
-    if (unplaced) { //without this makeRandomMove() can bug out -- just skips animation if hover piece not found
+    if (unplaced) {
       let unplacedY = unplaced.getBoundingClientRect().y;
       let placedY = piece.getBoundingClientRect().y;
       let yDiff = unplacedY - placedY;
-  
-      animating = true;
-      removeUnplaced();
+
+      this.animating = true;
+      this.removeUnplaced();
       let animation = piece.animate(
         [
           { transform: `translateY(${yDiff}px)`, offset: 0 },
@@ -87,168 +94,165 @@ function onColumnClick(column) {
           iterations: 1,
         }
       );
-      animation.addEventListener('finish', checkGameEnd);
+      animation.addEventListener('finish', () => {
+        this.checkGameEnd();
+      });
     } else {
-      checkGameEnd();
+      this.checkGameEnd();
     }
   }
-  
 
-function checkGameEnd() {
-    animating = false;    
-    
-    //check tie
-    if(!pieces.includes(0)){
-        modalContainer.style.display = "block";
-        modalMessage.textContent = "Tie";
+  checkGameEnd() {
+    this.animating = false;
+
+    if (!this.pieces.includes(0)) {
+      this.displayModal("Tie");
     }
 
-    //check if current player win
-    if(playerWin(playerTurn, pieces)){
-        modalContainer.style.display = "block";
-        modalMessage.textContent = `${playerTurn === RED_TURN ? "Red" : "Black"} WON !`;
-        const winnerColor = playerTurn === RED_TURN ? "red" : "black";
-        modalMessage.style.color = winnerColor;
+    if (this.playerWin(this.playerTurn, this.pieces)) {
+      let winnerColor = this.playerTurn === this.RED_TURN ? "red" : "black";
+      this.displayModal(`${winnerColor.toUpperCase()} WON !`, winnerColor);
     }
 
-    if(playerTurn === RED_TURN){
-        playerTurn = BLACK_TURN;
-    } else{
-        playerTurn = RED_TURN;
+    this.playerTurn = this.playerTurn === this.RED_TURN ? this.BLACK_TURN : this.RED_TURN;
+    this.updateHover();
+
+    if (!this.gameOver) { // Only update the timer if the game is not over
+      this.startTimer();
     }
-    updateHover();
-}
+  }
 
-function updateHover(){
-    removeUnplaced();
-
-    //add hover piece
-    if(pieces[hoverColumn] === 0) {
-   let cell = board.children[hoverColumn];
-   let piece = document.createElement('div');
-   piece.className = 'piece';
-   piece.dataset.player = playerTurn;
-   piece.dataset.placed = false;
-   cell.appendChild(piece);
-    }
-}
-
-function removeUnplaced(){
-    let unplaced = document.querySelector("[data-placed='false']");
-    if(unplaced) {
-        unplaced.parentElement.removeChild(unplaced);
-    }
-}
-
-function onMouseEnterColumn(column) {
-    hoverColumn = column
-    if(!animating){ // ingore hover when animating 
-        updateHover();
-    }
-}
-
-function playerWin(playerTurn, pieces){
+  playerWin(playerTurn, pieces) {
     for (let index = 0; index < 42; index++) {
-        if(
-        //Check horizontal win at starting index
-            index % 7 < 4 &&
-            pieces[index] === playerTurn &&
-            pieces[index + 1] === playerTurn &&
-            pieces[index + 2] === playerTurn &&
-            pieces[index + 3] === playerTurn 
-            ) {
-                board.children[index].firstChild.dataset.highlighted = true; // highlight winning pieces
-                board.children[index + 1].firstChild.dataset.highlighted = true;
-                board.children[index + 2].firstChild.dataset.highlighted = true;
-                board.children[index + 3].firstChild.dataset.highlighted = true;
-                clearInterval(intervalId); // reset timer so pieces dont drop after game end
-                return true;
-            }
-        if(
-        //Check vertical win at starting index
-            index < 21 &&
-            pieces[index] === playerTurn &&
-            pieces[index + 7] === playerTurn &&
-            pieces[index + 14] === playerTurn &&
-            pieces[index + 21] === playerTurn 
-            ) {
-                board.children[index].firstChild.dataset.highlighted = true;
-                board.children[index + 7].firstChild.dataset.highlighted = true;
-                board.children[index + 14].firstChild.dataset.highlighted = true;
-                board.children[index + 21].firstChild.dataset.highlighted = true;
-                clearInterval(intervalId);
-                return true;
-              }
-        if(
-        //Check diagonal win (top left to bottom right) at starting index
-            index % 7 < 4 &&
-            index < 18 &&
-            pieces[index] === playerTurn &&
-            pieces[index + 8] === playerTurn &&
-            pieces[index + 16] === playerTurn &&
-            pieces[index + 24] === playerTurn 
-            ) {
-                board.children[index].firstChild.dataset.highlighted = true;
-                board.children[index + 8].firstChild.dataset.highlighted = true;
-                board.children[index + 16].firstChild.dataset.highlighted = true;
-                board.children[index + 24].firstChild.dataset.highlighted = true;
-                clearInterval(intervalId);
-                return true;
-              }
-        if(
-        //Check diagonal win (top right to bottom left) at starting index
-            index % 7 >= 3 &&
-            index < 21 &&
-            pieces[index] === playerTurn &&
-            pieces[index + 6] === playerTurn &&
-            pieces[index + 12] === playerTurn &&
-            pieces[index + 18] === playerTurn 
-            ) {
-                board.children[index].firstChild.dataset.highlighted = true;
-                board.children[index + 6].firstChild.dataset.highlighted = true;
-                board.children[index + 12].firstChild.dataset.highlighted = true;
-                board.children[index + 18].firstChild.dataset.highlighted = true;
-                clearInterval(intervalId); 
-                return true;
-              }
+      if (
+        index % 7 < 4 &&//Check horizontal win at starting index
+        pieces[index] === playerTurn &&
+        pieces[index + 1] === playerTurn &&
+        pieces[index + 2] === playerTurn &&
+        pieces[index + 3] === playerTurn
+      ) {
+        this.highlightPieces([index, index + 1, index + 2, index + 3]);
+        clearInterval(this.intervalId);
+        return true;
+      }
 
+      if (
+        index < 21 &&//Check vertical win at starting index
+        pieces[index] === playerTurn &&
+        pieces[index + 7] === playerTurn &&
+        pieces[index + 14] === playerTurn &&
+        pieces[index + 21] === playerTurn
+      ) {
+        this.highlightPieces([index, index + 7, index + 14, index + 21]);
+        clearInterval(this.intervalId);
+        return true;
+      }
+
+      if (
+        index % 7 < 4 &&//Check diagonal win (top left to bottom right)
+        index < 18 &&
+        pieces[index] === playerTurn &&
+        pieces[index + 8] === playerTurn &&
+        pieces[index + 16] === playerTurn &&
+        pieces[index + 24] === playerTurn
+      ) {
+        this.highlightPieces([index, index + 8, index + 16, index + 24]);
+        clearInterval(this.intervalId);
+        return true;
+      }
+
+      if (
+        index % 7 >= 3 &&//Check diagonal win (top right to bottom left)
+        index < 21 &&
+        pieces[index] === playerTurn &&
+        pieces[index + 6] === playerTurn &&
+        pieces[index + 12] === playerTurn &&
+        pieces[index + 18] === playerTurn
+      ) {
+        this.highlightPieces([index, index + 6, index + 12, index + 18]);
+        clearInterval(this.intervalId);
+        return true;
+      }
     }
+
     return false;
 }
 
-let intervalId = null; 
-const timerElement = document.getElementById("timer");
-timerElement.innerHTML = `Drop a Piece to Begin`;
+  highlightPieces(indices) {
+    indices.forEach(index => {
+      this.board.children[index].firstChild.dataset.highlighted = true;
+    });
+  }
 
-function startTimer() {
-  let seconds = 10;
-  let countdown = seconds;
-  timerElement.innerHTML = `auto move in: ${countdown} s`;
-  clearInterval(intervalId); // reset timer on each move
-  intervalId = setInterval(() => {
-    countdown--;
-    if (countdown >= 0) {
-      timerElement.innerHTML = `auto move in: ${countdown} s`;
-    } else {
-      clearInterval(intervalId);
-      makeRandomMove();
+  displayModal(message, color) {
+    this.modalContainer.style.display = "block";
+    this.modalMessage.textContent = message;
+    if (color) {
+      this.modalMessage.style.color = color;
     }
-  }, 1000);
-}
+    this.gameOver = true; // Set game status to "game over"
+  }
 
-  function makeRandomMove() { //grabs a random open column and simulates a player click
-    let validCols = getOpenCols();
+  updateHover() {
+    this.removeUnplaced();
+    if (this.pieces[this.hoverColumn] === 0) {
+      let cell = this.board.children[this.hoverColumn];
+      let piece = document.createElement('div');
+      piece.className = 'piece';
+      piece.dataset.player = this.playerTurn;
+      piece.dataset.placed = false;
+      cell.appendChild(piece);
+    }
+  }
+
+  removeUnplaced() {
+    let unplaced = document.querySelector("[data-placed='false']");
+    if (unplaced) {
+      unplaced.parentElement.removeChild(unplaced);
+    }
+  }
+
+  onMouseEnterColumn(column) {
+    this.hoverColumn = column;
+    if (!this.animating) {
+      this.updateHover();
+    }
+  }
+
+  startTimer() {
+    let seconds = 10;
+    let countdown = seconds;
+    this.timerElement.innerHTML = `auto move in: ${countdown} s`;
+
+    clearInterval(this.intervalId);
+    this.intervalId = setInterval(() => {
+      countdown--;
+      if (!this.gameOver) { // Only update the timer if the game is not over
+        this.timerElement.innerHTML = `auto move in: ${countdown} s`;
+      }
+
+      if (countdown <= 0) {
+        clearInterval(this.intervalId);
+        if (!this.gameOver) { // Only make a random move if the game is not over
+          this.makeRandomMove();
+        }
+      }
+    }, 1000);
+  }
+
+  makeRandomMove() {
+    const validCols = this.getOpenCols();
     if (validCols.length === 0) {
       return;
     }
-    let randomCol = validCols[Math.floor(Math.random() * validCols.length)];
-    onColumnClick(randomCol);
+    const randomCol = validCols[Math.floor(Math.random() * validCols.length)];
+    this.onColumnClick(randomCol);
   }
-  
-  function getOpenCols() { //makes array of open columns
-    let openCols = [];
+
+  getOpenCols() {
+    const openCols = [];
     for (let column = 0; column < 7; column++) {
-      let openCol = pieces.filter((_, index) => index % 7 === column).lastIndexOf(0);
+      const openCol = this.pieces.filter((_, index) => index % 7 === column).lastIndexOf(0);
       if (openCol !== -1) {
         openCols.push(column);
       }
@@ -256,3 +260,6 @@ function startTimer() {
     return openCols;
   }
   
+}
+
+const game = new ConnectFour();
